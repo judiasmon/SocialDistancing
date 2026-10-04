@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: Social Distancing
-## Notes: Describe your addon.
+## Notes: Shows spell range for your target, focus, and party members.
 ## Author: Judiasmon
 ## Version: 1.0.0
 ## RequiredDeps:
@@ -16,6 +16,8 @@ libs/Ace3/AceDB-3.0/AceDB-3.0.xml
 libs/LibDBIcon-1.0/LibDataBroker-1.1/LibDataBroker-1.1.lua
 libs/LibDBIcon-1.0/LibDBIcon-1.0/LibDBIcon-1.0.lua
 
-# Main Files
+# Addon modules (load order matters)
+Core.lua
 SocialDistancing.lua
 Settings.lua
+Minimap.lua
