@@ -1,0 +1,7 @@
+package-as: SocialDistancing
+
+ignore:
+  - .git
+  - .github
+  - .vscode
+  - "*.zip"
