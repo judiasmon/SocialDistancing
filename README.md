@@ -62,3 +62,8 @@ needed.
 - `Minimap.lua` registers the minimap button.
 - `SocialDistancing.toc` declares addon metadata, libraries, and module load
   order.
+
+## License
+
+This project is distributed under the BSD 2-Clause License. See [LICENSE](LICENSE)
+for the full terms.
