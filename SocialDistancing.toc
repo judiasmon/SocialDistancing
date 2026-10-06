@@ -4,7 +4,7 @@
 ## Author: Judiasmon
 ## Version: 1.0.0
 ## RequiredDeps:
-## X-Curse-Project-ID: 999999
+## X-Curse-Project-ID: 1727199
 ## SavedVariables: SocialDistancingMinimapPOS
 ## SavedVariablesPerCharacter: SocialDistancingDB
 # Libraries
