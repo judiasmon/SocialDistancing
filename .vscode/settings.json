@@ -36,7 +36,10 @@
         "FONT_COLOR_CODE_CLOSE",
         "CANCEL",
         "Settings",
-        "AddonCompartmentFrame"
+        "AddonCompartmentFrame",
+        "SOUNDKIT",
+        "LOOT_ITEM_SELF",
+        "LOOT_ITEM_CREATED_SELF"
     ],
     "Lua.diagnostics.disable": [
         "assign-type-mismatch"

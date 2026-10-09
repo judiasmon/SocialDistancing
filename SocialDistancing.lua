@@ -1,5 +1,5 @@
 local rangeFrame = CreateFrame("Frame", "SocialDistancingRangeFrame", UIParent, "BasicFrameTemplateWithInset")
-rangeFrame:SetSize(340, 205)
+rangeFrame:SetSize(300, 82)
 rangeFrame:SetPoint("TOP", UIParent, "TOP", 0, -150)
 rangeFrame:SetFrameStrata("HIGH")
 rangeFrame:SetClampedToScreen(true)
@@ -16,28 +16,21 @@ end)
 rangeFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
 end)
+rangeFrame:SetScript("OnHide", function()
+    if not SocialDistancingDB.settingsKeys.onlyShowRangeOverlayInParty or IsInGroup() then
+        SocialDistancingDB.settingsKeys.showRangeOverlay = false
+    end
+    if SocialDistancing.RefreshOverlaySettingCheckbox then
+        SocialDistancing:RefreshOverlaySettingCheckbox()
+    end
+end)
 
 local rangeText = rangeFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 rangeText:SetPoint("TOPLEFT", rangeFrame, "TOPLEFT", 14, -38)
-rangeText:SetWidth(310)
+rangeText:SetWidth(270)
 rangeText:SetJustifyH("LEFT")
 rangeText:SetJustifyV("TOP")
 
-local specializationNames = {
-    [65] = "Holy Paladin",
-    [66] = "Protection Paladin",
-    [70] = "Retribution Paladin",
-    [102] = "Balance Druid",
-    [103] = "Feral Druid",
-    [104] = "Guardian Druid",
-    [105] = "Restoration Druid",
-    [256] = "Discipline Priest",
-    [257] = "Holy Priest",
-    [258] = "Shadow Priest",
-    [262] = "Elemental Shaman",
-    [263] = "Enhancement Shaman",
-    [264] = "Restoration Shaman",
-}
 local healerSpecializations = {
     [65] = true,
     [105] = true,
@@ -120,6 +113,11 @@ function SocialDistancing:UpdateRangeOverlay()
         return
     end
 
+    if SocialDistancingDB.settingsKeys.onlyShowRangeOverlayInParty and not IsInGroup() then
+        rangeFrame:Hide()
+        return
+    end
+
     if type(SocialDistancingDB.rangeAlertSettings) ~= "table" then
         SocialDistancingDB.rangeAlertSettings = {}
     end
@@ -151,8 +149,6 @@ function SocialDistancing:UpdateRangeOverlay()
         else
             rows[#rows + 1] = "Target: Choose a ranged spell for this unit in Settings"
         end
-    else
-        rows[#rows + 1] = "Target: No target"
     end
 
     local focusMode = self:GetUnitSpellMode("focus")
@@ -176,100 +172,70 @@ function SocialDistancing:UpdateRangeOverlay()
         else
             rows[#rows + 1] = "Focus: Choose a ranged spell for this unit in Settings"
         end
-    else
-        rows[#rows + 1] = "Focus: No focus"
     end
 
-    rows[#rows + 1] = "Party member ranges:"
-    local healerWarnings = {}
-
-    if IsInRaid() then
-        rows[#rows + 1] = "Party yard checks are unavailable in raids"
-    else
+    if not IsInRaid() then
         local playerX, playerY, _, playerMap
         if UnitPosition then
             playerX, playerY, _, playerMap = UnitPosition("player")
         end
         local memberCount = GetNumSubgroupMembers and GetNumSubgroupMembers() or 0
-        if memberCount == 0 then
-            rows[#rows + 1] = "Not in a party"
-        else
-            for index = 1, memberCount do
-                local unit = "party" .. index
-                local name = UnitName(unit) or unit
-                local className = UnitClass(unit)
-                local guid = UnitGUID(unit)
-                local spellKey
+        for index = 1, memberCount do
+            local unit = "party" .. index
+            local name = UnitName(unit) or unit
+            local guid = UnitGUID(unit)
+            local spellKey
+            if SocialDistancingDB.settingsKeys.syncPartyRanges then
+                spellKey = SocialDistancingDB.partyRangeSpellKey
+            else
+                spellKey = (guid and SocialDistancingDB.partyRangeSpellKeys[guid]) or SocialDistancingDB.partyRangeSpellKey
+            end
+            local partySpell = SocialDistancing.PartyRangeSpellByKey[spellKey] or SocialDistancing.PartyRangeSpells[1]
+            local specializationID = guid and specializationByGUID[guid]
+            local isHealer = healerSpecializations[specializationID]
+            local memberX, memberY, _, memberMap
+            if UnitPosition then
+                memberX, memberY, _, memberMap = UnitPosition(unit)
+            end
+
+            local distance
+            local inRange
+            if playerX and memberX and playerMap == memberMap then
+                local deltaX = memberX - playerX
+                local deltaY = memberY - playerY
+                distance = math.sqrt(deltaX * deltaX + deltaY * deltaY)
+                inRange = distance <= partySpell.range + 3
+            end
+
+            local rangeKey = guid and ("party:" .. guid .. ":" .. partySpell.key)
+            if rangeKey then
+                local alertConfigKey
                 if SocialDistancingDB.settingsKeys.syncPartyRanges then
-                    spellKey = SocialDistancingDB.partyRangeSpellKey
+                    alertConfigKey = "party:shared:" .. partySpell.key
                 else
-                    spellKey = (guid and SocialDistancingDB.partyRangeSpellKeys[guid]) or SocialDistancingDB.partyRangeSpellKey
+                    alertConfigKey = "party:" .. guid .. ":" .. partySpell.key
                 end
-                local partySpell = SocialDistancing.PartyRangeSpellByKey[spellKey] or SocialDistancing.PartyRangeSpells[1]
-                local specializationID = guid and specializationByGUID[guid]
-                local specializationName = specializationNames[specializationID]
-                local isHealer = healerSpecializations[specializationID]
-                local roleLabel = specializationName or (className or "Unknown class")
-                    .. (specializationID == 0 and "; spec unknown" or "; checking spec")
-                local memberX, memberY, _, memberMap
-                if UnitPosition then
-                    memberX, memberY, _, memberMap = UnitPosition(unit)
-                end
+                shouldPlayRangeAlert = (TrackRangeState(rangeKey, inRange) and rangeAlertSettings[alertConfigKey]) or shouldPlayRangeAlert
+            end
 
-                local distance
-                local inRange
-                if playerX and memberX and playerMap == memberMap then
-                    local deltaX = memberX - playerX
-                    local deltaY = memberY - playerY
-                    distance = math.sqrt(deltaX * deltaX + deltaY * deltaY)
-                    inRange = distance <= partySpell.range + 3
-                elseif partySpell.range == 40 then
-                    local unitInRange = _G["UnitInRange"]
-                    if unitInRange then
-                        local success, withinRange, checkedRange = pcall(unitInRange, unit)
-                        if success and checkedRange then
-                            inRange = withinRange
-                        end
-                    end
+            if inRange ~= nil then
+                local status = inRange and "IN RANGE" or "OUT OF RANGE"
+                local color = inRange and "ff00ff00" or "ffff4040"
+                if not inRange and isHealer then
+                    status = "OUT OF HEALER RANGE"
                 end
-
-                local rangeKey = guid and ("party:" .. guid .. ":" .. partySpell.key)
-                if rangeKey then
-                    local alertConfigKey
-                    if SocialDistancingDB.settingsKeys.syncPartyRanges then
-                        alertConfigKey = "party:shared:" .. partySpell.key
-                    else
-                        alertConfigKey = "party:" .. guid .. ":" .. partySpell.key
-                    end
-                    shouldPlayRangeAlert = (TrackRangeState(rangeKey, inRange) and rangeAlertSettings[alertConfigKey]) or shouldPlayRangeAlert
-                end
-
-                if inRange ~= nil then
-                    local status = inRange and "IN RANGE" or "OUT OF RANGE"
-                    local color = inRange and "ff00ff00" or "ffff4040"
-                    if not inRange and isHealer then
-                        status = "OUT OF HEALER RANGE"
-                        healerWarnings[#healerWarnings + 1] = name .. " (" .. roleLabel .. ")"
-                    elseif specializationID == 0 then
-                        roleLabel = (className or "Unknown class") .. "; spec unknown"
-                    end
-                    local distanceLabel = distance and string.format("%.1f yd", distance) or "40 yd check"
-                    rows[#rows + 1] = string.format("%s (%s): |c%s%s|r (%s)", name, roleLabel, color, status, distanceLabel)
-                else
-                    if specializationID == 0 then
-                        roleLabel = (className or "Unknown class") .. "; spec unknown"
-                    end
-                    rows[#rows + 1] = name .. " (" .. roleLabel .. "): |cffaaaaaaDistance unavailable here|r"
-                end
+                rows[#rows + 1] = string.format("%s: |c%s%s|r (%.1f yd)", name, color, status, distance)
+            else
+                rows[#rows + 1] = name .. ": |cffaaaaaaDistance unavailable|r"
             end
         end
     end
 
-    for _, healer in ipairs(healerWarnings) do
-        rows[#rows + 1] = "|cffff4040OUT OF HEALER RANGE: " .. healer .. "|r"
+    if #rows == 0 then
+        rows[#rows + 1] = "Select a target or focus to check range"
     end
-    rows[#rows + 1] = "Exact party yards are outdoor-only; 40 yd range checks also work indoors."
     rangeText:SetText(table.concat(rows, "\n"))
+    rangeFrame:SetHeight(math.max(82, rangeText:GetStringHeight() + 52))
     rangeFrame:Show()
 
     if shouldPlayRangeAlert then
@@ -355,9 +321,14 @@ end
 table.insert(UISpecialFrames, "SocialDistancingRangeFrame")
 
 function SocialDistancing:ToggleRangeOverlay()
-    if rangeFrame:IsShown() then
+    if SocialDistancingDB.settingsKeys.showRangeOverlay then
+        SocialDistancingDB.settingsKeys.showRangeOverlay = false
         rangeFrame:Hide()
     else
+        SocialDistancingDB.settingsKeys.showRangeOverlay = true
         SocialDistancing:UpdateRangeOverlay()
+    end
+    if SocialDistancing.RefreshOverlaySettingCheckbox then
+        SocialDistancing:RefreshOverlaySettingCheckbox()
     end
 end

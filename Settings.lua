@@ -40,6 +40,12 @@ local settings = {
         defaultValue = true
     },
     {
+        settingText = "Only show overlay while grouped",
+        settingKey = "onlyShowRangeOverlayInParty",
+        settingTooltip = "Hide the range overlay while solo (also applies to raids)",
+        defaultValue = false
+    },
+    {
         settingText = "Sync one range across the party",
         settingKey = "syncPartyRanges",
         settingTooltip = "Use one healing range preset for every party member",
@@ -51,6 +57,13 @@ local checkboxes = 0
 local settingCheckboxes = {}
 local RefreshPartySelectors
 local RefreshSpellAlertCheckboxes
+
+function SocialDistancing:RefreshOverlaySettingCheckbox()
+    local checkbox = settingCheckboxes.showRangeOverlay
+    if checkbox then
+        checkbox:SetChecked(SocialDistancingDB.settingsKeys.showRangeOverlay)
+    end
+end
 
 local function CreateCheckbox(checkboxText, key, checkboxTooltip, defaultValue)
     local checkbox = CreateFrame("CheckButton", "SocialDistancingCheckboxID" .. checkboxes, settingsFrame, "UICheckButtonTemplate")
@@ -79,7 +92,7 @@ local function CreateCheckbox(checkboxText, key, checkboxTooltip, defaultValue)
 
     checkbox:SetScript("OnClick", function (self)
         SocialDistancingDB.settingsKeys[key] = self:GetChecked()
-        if key == "showRangeOverlay" then
+        if key == "showRangeOverlay" or key == "onlyShowRangeOverlayInParty" then
             SocialDistancing:UpdateRangeOverlay()
         elseif key == "syncPartyRanges" then
             if RefreshPartySelectors then
