@@ -2,7 +2,7 @@
 ## Title: Social Distancing
 ## Notes: Shows spell range for your target, focus, and party members.
 ## Author: Judiasmon
-## Version: 1.0.0
+## Version: 1.0.1
 ## RequiredDeps:
 ## X-Curse-Project-ID: 1727199
 ## SavedVariables: SocialDistancingMinimapPOS

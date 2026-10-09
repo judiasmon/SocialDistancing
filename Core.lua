@@ -16,6 +16,9 @@ end
 if SocialDistancingDB.settingsKeys.showRangeOverlay == nil then
     SocialDistancingDB.settingsKeys.showRangeOverlay = true
 end
+if SocialDistancingDB.settingsKeys.onlyShowRangeOverlayInParty == nil then
+    SocialDistancingDB.settingsKeys.onlyShowRangeOverlayInParty = false
+end
 if SocialDistancingDB.settingsKeys.syncPartyRanges == nil then
     SocialDistancingDB.settingsKeys.syncPartyRanges = false
 end
@@ -71,4 +74,3 @@ function SocialDistancing:SetConfiguredRangeSpell(unit, spellMode, spellName)
         end
     end
 end
-

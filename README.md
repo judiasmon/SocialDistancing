@@ -8,14 +8,12 @@ also highlights party healers who are out of range.
 
 - Check whether your target and focus are in range of a selected hostile or
   friendly spell.
-- Estimate party-member distance outdoors and use the game's 40-yard range
-  check indoors when available.
+- Estimate party-member distance outdoors when unit positions are available.
 - Select a healing-range preset per party member or synchronize one preset
   across the party.
 - Optionally play an alert when a tracked unit changes from in range to out of
   range.
-- Identify party specializations, including healer roles, when inspect data is
-  available.
+- Mark out-of-range healers when inspect data is available.
 - Keep the range overlay movable and toggle it from the minimap icon or slash
   command.
 
@@ -35,24 +33,26 @@ needed.
 ## Using the addon
 
 - Enter `/sd` or `/socialdistancing` to show or hide the range overlay.
-- Left-click the minimap icon to toggle the overlay.
+- Left-click the minimap icon to toggle the overlay. Closing the overlay also
+  disables it until you open it again or re-enable it in settings.
 - Right-click the minimap icon to open settings.
 - In settings, select range spells for hostile and friendly targets/focuses.
   Party range presets can be assigned to an individual member or synchronized
   across the party. Enable an **Alert** checkbox to hear a sound when that
   tracked range changes from in range to out of range.
+- Enable **Only show overlay while grouped** to hide the range overlay while
+  solo. This setting also applies in raids.
 - Drag the overlay by its title bar to reposition it.
 
 ## Range-check notes
 
 - Spell checks depend on the range information exposed by the game client and
   may report an unknown result.
-- Exact party distances are available outdoors when the game provides unit
-  positions. Indoors, the game's 40-yard check is used where supported; other
-  distances may be unavailable.
+- Party-member distance is only available when the game provides unit positions,
+  typically outdoors.
 - Party range presets are healing spells selected for the classes in your
   current party. Specialization labels depend on inspect data being available.
-- Party yard checks are not shown while in a raid.
+- Party-member distances are not listed while in a raid.
 
 ## Files
 
